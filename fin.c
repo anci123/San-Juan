@@ -7,23 +7,27 @@
 #include"struct.h"
 #include"function.h"
 #include"profession.h"
-void producer_action(_player * player, int playerNum, int privilege) {
-}
-void trader_action(_player * player, int playerNum, int privilege) {}
+#define DEBUG
+int level = 1;
 int main() {
-    int start=0;
+    printStart();
+    //int start = 0;
+    int end = 0;
     _player player[4];
     cardRander();
     memset(player, 0x00, sizeof(player));
     for(int i = 0; i < 4; ++i) {
         player[i].id = i;
+        for(int k = 0; k < 12; ++k) player[i].buildings[k] = -1;
         player[i].buildings[0] = 0;
         player[i].numbers_of_buildings = 1;
         player[i].point = 1;
         player[i].cards.id = 0;
         player[i].cards.pNext = NULL;
-        for(int j = 0; j < 4; ++j){
-            addCard(&player[i],cardHeap[heapIndex]);
+        player[i].specials.byte = 0;
+        player[i].card_under = 0;
+        for(int j = 0; j < 4; ++j) {
+            addCard(&player[i], cardHeap[heapIndex]);
             --heapIndex;
         }
         player[i].card_limit = 4;
@@ -31,7 +35,6 @@ int main() {
         player[i].pNext = NULL;
     }//初始化四個玩家的struct
     system("clear");
-    int level = 1;
     printf("選擇遊戲等級\n(1)level 1\n(2)level 2\n");
     scanf("%d", &level);
     system("clear");
@@ -51,8 +54,8 @@ int main() {
         ii %= 4 + 1;
         int i = 0;
         int usedRole[5] = {0};
-        if(ii >= governor) i = ii - governor + 1;
-        else i = ii + governor - 1;
+        i = ii + governor - 1;
+        if(i > 4)i -= 4;
         system("clear");
         printf(BLUE"玩家 %d 是總督(從他開始)\n", governor);
         sleep(2);
@@ -63,6 +66,7 @@ int main() {
             if(jj >= governor) j = jj + governor - 1;
             else j = jj + governor - 1;
             if(j > 4) j -= 4;
+
             if(j == playerNum) choose = playerChoose(usedRole);
             else choose = computerChooseRole(usedRole);
             system("clear");
@@ -88,16 +92,34 @@ int main() {
             default:
                 break;
             }
+            if(player[j - 1].specials.build.Chapel) Chapel(&player[j - 1], playerNum, j);
         }
-        for(int j = 0; j < 4; ++j) {
-            if(player[j].card_limit < player[j].number_of_cards) {
-                if(j + 1 == playerNum) playerDiscard(&player[j]);
-                else computerDicard(&player[j]);
+        /*for(int jj = 1; jj <= 4; ++jj) {
+            int j = 0;
+            if(jj >= governor) j = jj + governor - 1;
+            else j = jj + governor - 1;
+            if(j > 4) j -= 4;
+        }*/
+        for(int k = 0; k < 4; ++k) {
+            if(player[k].numbers_of_buildings == 12) {
+                printEND();
+                system("clear");
+                end = 1;
+                break;
+            }
+        }
+        if(end==1)break;
+        for(int k = 0; k < 4; ++k) {
+            if(player[k].card_limit < player[k].number_of_cards) {
+                if(k + 1 == playerNum) playerDiscard(&player[k]);
+                else computerDicard(&player[k]);
             }
         }
         ++governor;
         ++ii;
         if(governor > 4) governor = 1;
+        if(end) break;
     }
+    countPoint(player);
     return 0;
 }
