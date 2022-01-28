@@ -4,6 +4,7 @@
 #include<stdbool.h>
 int price[5][5] = {{1, 1, 1, 2, 2}, {1, 1, 2, 2, 2}, {1, 1, 2, 2, 3}, {1, 2, 2, 2, 3}, {1, 2, 2, 3, 3}};
 int priceOrder = 0;
+int level[4] = {0};
 typedef struct _card {
     int id;
     struct _card *pNext;
@@ -82,10 +83,9 @@ typedef struct _c {
 } c;
 
 typedef struct _player {
-    int id;
     card cards;
+    int id;
     int number_of_cards;
-    int role;
     int buildings[12];
     int numbers_of_buildings;
     int point;
@@ -94,7 +94,6 @@ typedef struct _player {
     c buildingInfo[12];
     int numbers_of_products;
     special_effective specials;
-    struct _player *pNext;
     int card_under;
 } _player;
 

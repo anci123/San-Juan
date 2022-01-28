@@ -270,7 +270,7 @@ void printStatus(_player *player, int playerNum) {
         int numLine = player[i].numbers_of_buildings / 6 + 1;
         int line = 0;
         for(int k = 0; k < numLine; ++k) {
-            if(numLine == 2)break;
+            if(numLine == 3) numLine=2;
             if(k == 0) line = (6 > player[i].numbers_of_buildings) ? player[i].numbers_of_buildings : 6;
             if(k == 1) line = player[i].numbers_of_buildings - 6;
             for(int j = 0; j < line; ++j)printf("┌────────────┐ ");
@@ -325,7 +325,7 @@ void checkChoose(_player *player, int playNum) {
     printf(NONE);
     int c = 0;
     char buffer[10] = {0};
-    printf("選擇察看手牌或牌局\n(1)手牌\n(2)排局\n(3)兩者\n(4)跳過\n");
+    printf("選擇察看手牌或牌局\n(1)手牌\n(2)排局\n(3)兩者\n(4)跳過\n(5)離開遊戲\n");
     scanf("%d", &c);
     switch(c) {
     case 1:
@@ -350,6 +350,9 @@ void checkChoose(_player *player, int playNum) {
         fgets(buffer, 10, stdin);
         break;
     case 4:
+        break;
+    case 5:
+        exit(0);
         break;
     default:
         printf("無此選項\n");
@@ -376,11 +379,27 @@ void playerDiscard(_player *player) {
     }
     printf(NONE);
 }
+
 void computerDicard(_player *player) {
-    int i = time(0);
-    srand(i);
-    int r = rand() % player->number_of_cards;
-    while(player->number_of_cards > player->card_limit) discard(player, 1);
+    if(level[player->id] == 2) {
+        int minOrder = 1, t = 0, min = 0;
+        while(player->number_of_cards > player->card_limit) {
+            card *pCard = player->cards.pNext;
+            min = 10;
+            while(pCard) {
+                ++t;
+                if(cardType[pCard->id].point < min) {
+                    min = cardType[pCard->id].point;
+                    minOrder = t;
+                    if(min == 1)break;
+                }
+                pCard = pCard->pNext;
+            }
+            discard(player, minOrder);
+        }
+    }
+    else
+        while(player->number_of_cards > player->card_limit)discard(player, 1);
 }
 
 int computerChooseRole(int *used) {
@@ -396,6 +415,16 @@ int computerChooseRole(int *used) {
     used[r] = 1;
     return r + 1;
 }
+int computerChooseRole_level2(int *used) {
+    int r = 0;
+    if(used[4]==0) r = 4;
+    else if(used[0]==0) r = 0;
+    else if(used[3]==0) r = 3;
+    else r = computerChooseRole(used);
+    used[r] = 1;
+    return r + 1;
+}
+
 int playerChoose(int *used) {
     int choose = 0;
     system("clear");

@@ -7,8 +7,6 @@
 #include"struct.h"
 #include"function.h"
 #include"profession.h"
-#define DEBUG
-int level = 1;
 int main() {
     printStart();
     //int start = 0;
@@ -17,7 +15,6 @@ int main() {
     cardRander();
     memset(player, 0x00, sizeof(player));
     for(int i = 0; i < 4; ++i) {
-        player[i].id = i;
         for(int k = 0; k < 12; ++k) player[i].buildings[k] = -1;
         player[i].buildings[0] = 0;
         player[i].numbers_of_buildings = 1;
@@ -26,17 +23,13 @@ int main() {
         player[i].cards.pNext = NULL;
         player[i].specials.byte = 0;
         player[i].card_under = 0;
+        player[i].id = i;
         for(int j = 0; j < 4; ++j) {
             addCard(&player[i], cardHeap[heapIndex]);
             --heapIndex;
         }
         player[i].card_limit = 4;
-        player[i].role = 0;
-        player[i].pNext = NULL;
     }//初始化四個玩家的struct
-    system("clear");
-    printf("選擇遊戲等級\n(1)level 1\n(2)level 2\n");
-    scanf("%d", &level);
     system("clear");
     int playerNum = 0;
     printf("選擇玩家號碼:\n(1)玩家 1\n(2)玩家 2\n(3)玩家 3\n(4)玩家 4\n(5)隨機\n");
@@ -44,6 +37,15 @@ int main() {
     if(playerNum == 5) {
         srand(time(0));
         playerNum = rand() % 4 + 1;
+    }
+    system("clear");
+    for(int k = 0; k < 4; ++k) {
+        if(k + 1 != playerNum) {
+            while(level[k] < 1 || level[k] > 2) {
+                printf("選擇玩家%2d 遊戲等級\n(1)level 1\n(2)level 2\n", k + 1);
+                scanf("%d", &level[k]);
+            }
+        }
     }
     system("clear");
     checkChoose(player, playerNum);
@@ -68,7 +70,10 @@ int main() {
             if(j > 4) j -= 4;
 
             if(j == playerNum) choose = playerChoose(usedRole);
-            else choose = computerChooseRole(usedRole);
+            else {
+                if(level[j - 1] == 1) choose = computerChooseRole(usedRole);
+                else if(level[j - 1] == 2) choose = computerChooseRole_level2(usedRole);
+            }
             system("clear");
             printf(GREEN"玩家%2d 選擇 %s\n", j, roles[choose - 1].name);
             sleep(2);
@@ -108,7 +113,7 @@ int main() {
                 break;
             }
         }
-        if(end==1)break;
+        if(end == 1)break;
         for(int k = 0; k < 4; ++k) {
             if(player[k].card_limit < player[k].number_of_cards) {
                 if(k + 1 == playerNum) playerDiscard(&player[k]);

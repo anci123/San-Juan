@@ -206,7 +206,7 @@ void builder_action(_player *player, int playerNum, int privilege) {
         }
         else {
             int buildSuccess = 0;
-            int choose = 0;
+            int choose = 0, min = 10, minOrder = 0, maxId = 0;
             card *pCard = &player[i - 1].cards;
             while(pCard) {
                 ++choose;
@@ -217,16 +217,49 @@ void builder_action(_player *player, int playerNum, int privilege) {
                             --pay;
                             if(pay < 0) pay = 0;
                         }
-                        if(pay < player[i - 1].number_of_cards) {
-                            discard(&player[i - 1], choose);
-                            for(int j = 1; j <= pay; ++j) discard(&player[i - 1], 1);
-                            buildSuccess = 1;
-                            Build(&player[i - 1], i, id);
-                            break;
+                        if(level[i - 1] == 2) {
+                            if(pay < player[i - 1].number_of_cards && (cardType[id].point > cardType[maxId].point||cardType[id].point==0)) {
+                                min = pay;
+                                minOrder = choose;
+                                maxId = id;
+                                if(cardType[id].point==0) break;
+                            }
+                        }
+                        else {
+                            if(pay < player[i - 1].number_of_cards) {
+                                if(player->specials.byte & 1ULL << (id - 5)) continue;
+                                discard(&player[i - 1], choose);
+                                for(int j = 1; j <= pay; ++j) discard(&player[i - 1], 1);
+                                buildSuccess = 1;
+                                Build(&player[i - 1], i, id);
+                                break;
+                            }
                         }
                     }
                 }
                 pCard = pCard->pNext;
+            }
+            if(level[i-1] == 2) {
+                discard(&player[i - 1], minOrder);
+                pay = min;
+                minOrder = 1, min = 0;
+                int t = 0;
+                for(int j = 1; j <= pay; ++j) {
+                    card *pCard = player->cards.pNext;
+                    min = 10;
+                    while(pCard) {
+                        ++t;
+                        if(cardType[pCard->id].point < min) {
+                            min = cardType[pCard->id].point;
+                            minOrder = t;
+                            if(min==1) break;
+                        }
+                        pCard = pCard->pNext;
+                    }
+                    discard(player, minOrder);
+                }
+                buildSuccess = 1;
+                Build(&player[i - 1], i, maxId);
             }
             if(!buildSuccess) {
                 printf(BROWN"玩家%2d 選擇不建造\n", i);
@@ -309,7 +342,7 @@ void prospector_action(_player * player, int playerNum, int privilege) {
 }
 
 
-void councillor_Archive(_player *player, int drawCard, int keep, bool isPlayer) {
+void councillor_Archive(_player * player, int drawCard, int keep, bool isPlayer) {
     int choose[20], offset = 0;
     for(int i = 0; i < drawCard; ++i) {
         addCard(player, cardHeap[heapIndex]);
